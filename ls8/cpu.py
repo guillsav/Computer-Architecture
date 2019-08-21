@@ -104,7 +104,7 @@ class CPU:
                 running = False
                 break
             else:
-                print(f"{self.ram[self.pc]} is an invalid command!")
+                print(f"{self.ram[self.pc]} is an unknown instruction!")
                 break
 
 
