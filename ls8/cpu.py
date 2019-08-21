@@ -80,10 +80,6 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
-        # It needs to read the memory address that's stored in register `PC`, and store
-        # that result in `IR`, the _Instruction Register_. This can just be a local
-        # variable in `run()`.
-        IR = self.ram[self.pc]
 
         LDI = 0b10000010
         PRN = 0b01000111
@@ -92,15 +88,19 @@ class CPU:
         running = True
 
         while running:
+            # It needs to read the memory address that's stored in register `PC`, and store
+            # that result in `IR`, the _Instruction Register_. This can just be a local
+            # variable in `run()`.
+            IR = self.ram[self.pc]
             operand_a = self.ram_read(self.pc + 1)
             operand_b = self.ram_read(self.pc + 2)
-            if self.ram[self.pc] == LDI:
+            if IR == LDI:
                 self.reg[operand_a] = operand_b
                 self.pc += 3
-            elif self.ram[self.pc] == PRN:
+            elif IR == PRN:
                 print(self.reg[operand_a])
                 self.pc += 2
-            elif self.ram[self.pc] == HLT:
+            elif IR == HLT:
                 running = False
             else:
                 print(f"{self.ram[self.pc]} is an unknown instruction!")
