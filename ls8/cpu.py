@@ -102,7 +102,6 @@ class CPU:
                 self.pc += 2
             elif self.ram[self.pc] == HLT:
                 running = False
-                break
             else:
                 print(f"{self.ram[self.pc]} is an unknown instruction!")
                 break
