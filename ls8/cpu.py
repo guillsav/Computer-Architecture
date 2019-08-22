@@ -15,8 +15,6 @@ class CPU:
         self.reg = [0] * 8
         self.sp = 0b00000111  # 7
 
-
-
         # Also add properties for any internal registers you need, e.g. `PC`.
         self.pc = 0
 
@@ -64,6 +62,10 @@ class CPU:
             self.reg[reg_a] += self.reg[reg_b]
         elif op == "MUL":
             self.reg[reg_a] *= self.reg[reg_b]
+        elif op == "DIV":
+            self.reg[reg_a] = self.reg[reg_a] // self.reg[reg_b]
+        elif op == "SUB":
+            self.reg[reg_a] -= self.reg[reg_b]
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -90,12 +92,18 @@ class CPU:
     def run(self):
         """Run the CPU."""
 
-        LDI  = 0b10000010
-        PRN  = 0b01000111
-        HLT  = 0b00000001
-        MUL  = 0b10100010
+        LDI = 0b10000010
+        HLT = 0b00000001
+        MUL = 0b10100010
+        ADD = 0b10100000
+        DIV = 0b10100011
+        SUB = 0b10100001
         PUSH = 0b01000101
-        POP  = 0b01000110
+        POP = 0b01000110
+        CALL = 0b01010000
+        RET = 0b00010001
+        NOP = 0b00000000
+        PRN = 0b01000111
 
         running = True
         self.reg[self.sp] = 0b11111111  # 255
@@ -115,16 +123,39 @@ class CPU:
             elif IR == MUL:
                 self.alu('MUL', operand_a, operand_b)
                 self.pc += 3
+            elif IR == ADD:
+                self.alu('ADD', operand_a, operand_b)
+                self.pc += 3
+            elif IR == DIV:
+                self.alu('DIV', operand_a, operand_b)
+                self.pc += 3
+            elif IR == SUB:
+                self.alu('SUB', operand_a, operand_b)
+                self.pc += 3
+            elif IR == NOP:
+               pass
             elif IR == PUSH:
                 self.reg[self.sp] -= 1  # Decrement SP.
                 value = self.reg[operand_a]  # Get the register number operand.
-                self.ram[self.reg[self.sp]] = value  # Store value in ram at the SP.
+                # Store value in ram at the SP.
+                self.ram[self.reg[self.sp]] = value
                 self.pc += 2
             elif IR == POP:
-                value = self.ram[self.reg[self.sp]]  # Get the value from ram at AT.
-                self.reg[operand_a] = value  # Store the value from the stack in the register.
+                # Get the value from ram at AT.
+                value = self.ram[self.reg[self.sp]]
+                # Store the value from the stack in the register.
+                self.reg[operand_a] = value
                 self.reg[self.sp] += 1  # Increment SP.
                 self.pc += 2
+            elif IR == CALL:
+                self.reg[self.sp] -= 1
+                self.ram[self.reg[self.sp]] = self.pc + 2
+                self.pc = self.reg[operand_a]
+            elif IR == RET:
+                # Set the pc to the return address.
+                self.pc = self.ram[self.reg[self.sp]]
+                self.reg[self.sp] += 1
+
             elif IR == HLT:
                 running = False
             else:
