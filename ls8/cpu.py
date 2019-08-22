@@ -133,7 +133,8 @@ class CPU:
                 self.alu('SUB', operand_a, operand_b)
                 self.pc += 3
             elif IR == NOP:
-               pass
+                print("There is no instructions there, therefore I'll move on.")
+                continue
             elif IR == PUSH:
                 self.reg[self.sp] -= 1  # Decrement SP.
                 value = self.reg[operand_a]  # Get the register number operand.
@@ -155,7 +156,6 @@ class CPU:
                 # Set the pc to the return address.
                 self.pc = self.ram[self.reg[self.sp]]
                 self.reg[self.sp] += 1
-
             elif IR == HLT:
                 running = False
             else:
