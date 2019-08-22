@@ -13,6 +13,9 @@ class CPU:
         # general-purpose registers.
         self.ram = [0] * 255
         self.reg = [0] * 8
+        self.sp = 0b00000111  # 7
+
+
 
         # Also add properties for any internal registers you need, e.g. `PC`.
         self.pc = 0
@@ -46,29 +49,13 @@ class CPU:
                         num = comment_split[0].strip()
                         if num == "":
                             continue
-                        x = int(num, 2)
-                        self.ram[address] = x
+                        instruction = int(num, 2)
+                        self.ram[address] = instruction
                         address += 1
 
             except FileNotFoundError:
                 print(f"{sys.argv[0]}: {sys.argv[1]} not found")
                 sys.exit(2)
-
-        # For now, we've just hardcoded a program:
-
-        # program = [
-        #     # From print8.ls8
-        #     0b10000010,  # LDI R0,8
-        #     0b00000000,
-        #     0b00001000,
-        #     0b01000111,  # PRN R0
-        #     0b00000000,
-        #     0b00000001,  # HLT
-        # ]
-
-        # for instruction in program:
-        #     self.ram[address] = instruction
-        #     address += 1
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
@@ -103,13 +90,15 @@ class CPU:
     def run(self):
         """Run the CPU."""
 
-        LDI = 0b10000010
-        PRN = 0b01000111
-        HLT = 0b00000001
-        MUL = 0b10100010
+        LDI  = 0b10000010
+        PRN  = 0b01000111
+        HLT  = 0b00000001
+        MUL  = 0b10100010
+        PUSH = 0b01000101
+        POP  = 0b01000110
 
         running = True
-
+        self.reg[self.sp] = 0b11111111  # 255
         while running:
             # It needs to read the memory address that's stored in register `PC`, and store
             # that result in `IR`, the _Instruction Register_. This can just be a local
@@ -126,10 +115,18 @@ class CPU:
             elif IR == MUL:
                 self.alu('MUL', operand_a, operand_b)
                 self.pc += 3
+            elif IR == PUSH:
+                self.reg[self.sp] -= 1  # Decrement SP.
+                value = self.reg[operand_a]  # Get the register number operand.
+                self.ram[self.reg[self.sp]] = value  # Store value in ram at the SP.
+                self.pc += 2
+            elif IR == POP:
+                value = self.ram[self.reg[self.sp]]  # Get the value from ram at AT.
+                self.reg[operand_a] = value  # Store the value from the stack in the register.
+                self.reg[self.sp] += 1  # Increment SP.
+                self.pc += 2
             elif IR == HLT:
                 running = False
             else:
                 print(f"{self.ram[self.pc]} is an unknown instruction!")
                 break
-
-
